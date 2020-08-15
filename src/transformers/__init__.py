@@ -623,6 +623,7 @@ if is_tf_available():
         TFLongformerForSequenceClassification,
         TFLongformerForTokenClassification,
         TFLongformerForMultipleChoice
+<<<<<<< HEAD
     )
     from .modeling_tf_lxmert import (
         TF_LXMERT_PRETRAINED_MODEL_ARCHIVE_LIST,
@@ -631,6 +632,8 @@ if is_tf_available():
         TFLxmertModel,
         TFLxmertPreTrainedModel,
         TFLxmertVisualFeatureEncoder,
+=======
+>>>>>>> adding TFLongformer tokenclass, seqclass, multchoice
     )
     from .modeling_tf_mobilebert import (
         TF_MOBILEBERT_PRETRAINED_MODEL_ARCHIVE_LIST,

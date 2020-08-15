@@ -20,6 +20,7 @@ from .configuration_longformer import LongformerConfig
 from .file_utils import add_code_sample_docstrings, add_start_docstrings, add_start_docstrings_to_callable, \
     MULTIPLE_CHOICE_DUMMY_INPUTS
 from .modeling_tf_bert import TFBertIntermediate, TFBertOutput, TFBertPooler, TFBertSelfOutput
+
 from .modeling_tf_outputs import (
     TFBaseModelOutput,
     TFBaseModelOutputWithPooling,
