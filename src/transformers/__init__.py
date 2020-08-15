@@ -584,6 +584,9 @@ if is_tf_available():
         TFLongformerForMaskedLM,
         TFLongformerForQuestionAnswering,
         TFLongformerSelfAttention,
+        TFLongformerForSequenceClassification,
+        TFLongformerForTokenClassification,
+        TFLongformerForMultipleChoice
     )
 
     from .modeling_tf_mobilebert import (

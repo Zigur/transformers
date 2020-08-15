@@ -16,6 +16,8 @@
 
 import unittest
 
+import numpy
+
 from transformers import is_tf_available
 from transformers.testing_utils import require_tf, slow
 
@@ -31,6 +33,9 @@ if is_tf_available():
         TFLongformerForMaskedLM,
         TFLongformerForQuestionAnswering,
         TFLongformerSelfAttention,
+        TFLongformerForSequenceClassification,
+        TFLongformerForTokenClassification,
+        TFLongformerForMultipleChoice
     )
 
     def shape_list(x):
@@ -212,6 +217,38 @@ class TFLongformerModelTester:
         self.parent.assertListEqual(shape_list(result["start_logits"]), [self.batch_size, self.seq_length])
         self.parent.assertListEqual(shape_list(result["end_logits"]), [self.batch_size, self.seq_length])
 
+    def create_and_check_longformer_for_sequence_classification(
+        self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
+    ):
+        config.num_labels = self.num_labels
+        model = TFLongformerForSequenceClassification(config=config)
+        inputs = dict(input_ids=input_ids, attention_mask=input_mask, labels=sequence_labels)
+        loss, output = model(inputs)
+        self.parent.assertListEqual(shape_list(output), [self.batch_size, self.num_labels])
+
+    def create_and_check_longformer_for_token_classification(
+        self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
+    ):
+        config.num_labels = self.num_labels
+        model = TFLongformerForTokenClassification(config=config)
+        inputs = dict(input_ids=input_ids, attention_mask=input_mask, token_type_ids=token_type_ids)
+        output, = model(inputs)
+        self.parent.assertListEqual(list(output.shape), [self.batch_size, self.seq_length, self.num_labels])
+
+    def create_and_check_longformer_for_multiple_choice(
+        self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
+    ):
+        config.num_choices = self.num_choices
+        model = TFLongformerForMultipleChoice(config=config)
+        inputs = dict(
+            input_ids=tf.tile(tf.expand_dims(input_ids, 1), (1, self.num_choices, 1)),
+            attention_mask=tf.tile(tf.expand_dims(input_mask, 1), (1, self.num_choices, 1)),
+            token_type_ids=tf.tile(tf.expand_dims(token_type_ids, 1), (1, self.num_choices, 1))
+        )
+        output, = model(inputs)
+        self.parent.assertListEqual(list(output.shape), [self.batch_size, self.num_choices])
+
+
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
         (
@@ -258,7 +295,6 @@ class TFLongformerModelTester:
 
         return config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
 
-
 @require_tf
 class TFLongformerModelTest(TFModelTesterMixin, unittest.TestCase):
     test_pruning = False  # pruning is not supported
@@ -295,6 +331,18 @@ class TFLongformerModelTest(TFModelTesterMixin, unittest.TestCase):
     def test_longformer_for_question_answering(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs_for_question_answering()
         self.model_tester.create_and_check_longformer_for_question_answering(*config_and_inputs)
+
+    def test_for_sequence_classification(self):
+        config_and_inputs = self.model_tester.prepare_config_and_inputs()
+        self.model_tester.create_and_check_longformer_for_sequence_classification(*config_and_inputs)
+
+    def test_for_token_classification(self):
+        config_and_inputs = self.model_tester.prepare_config_and_inputs()
+        self.model_tester.create_and_check_longformer_for_token_classification(*config_and_inputs)
+
+    def test_for_multiple_choice(self):
+        config_and_inputs = self.model_tester.prepare_config_and_inputs()
+        self.model_tester.create_and_check_longformer_for_multiple_choice(*config_and_inputs)
 
 
 @require_tf
@@ -529,3 +577,14 @@ class TFLongformerModelIntegrationTest(unittest.TestCase):
         tf.debugging.assert_near(tf.reduce_mean(loss), expected_loss, rtol=1e-4)
         tf.debugging.assert_near(tf.reduce_sum(prediction_scores), expected_prediction_scores_sum, rtol=1e-4)
         tf.debugging.assert_near(tf.reduce_mean(prediction_scores), expected_prediction_scores_mean, rtol=1e-4)
+
+    @slow
+    def test_inference_classification_head(self):
+        model = TFLongformerForSequenceClassification.from_pretrained("allenai/longformer-large-4096")
+
+        input_ids = tf.constant([[0, 31414, 232, 328, 740, 1140, 12695, 69, 46078, 1588, 2]])
+        output = model(input_ids)[0]
+        expected_shape = [1, 3]
+        self.assertEqual(list(output.numpy().shape), expected_shape)
+        expected_tensor = tf.constant([[-0.9469, 0.3913, 0.5118]])
+        self.assertTrue(numpy.allclose(output.numpy(), expected_tensor.numpy(), atol=1e-4))
