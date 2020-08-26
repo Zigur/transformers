@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tensorflow Longformer model. """
 
-import logging
-
 import tensorflow as tf
 
 from .configuration_longformer import LongformerConfig
@@ -41,9 +39,10 @@ from .modeling_tf_utils import (
     shape_list, TFSequenceClassificationLoss, TFTokenClassificationLoss, TFMultipleChoiceLoss,
 )
 from .tokenization_utils import BatchEncoding
+from .utils import logging
 
 
-logger = logging.getLogger(__name__)
+logger = logging.get_logger(__name__)
 
 _CONFIG_FOR_DOC = "LongformerConfig"
 _TOKENIZER_FOR_DOC = "LongformerTokenizer"
