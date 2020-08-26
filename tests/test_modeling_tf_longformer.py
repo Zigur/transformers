@@ -41,7 +41,7 @@ if is_tf_available():
 
     def shape_list(x):
         """
-            copied from transformers.modeling_tf_utils
+        copied from transformers.modeling_tf_utils
         """
         static = x.shape.as_list()
         dynamic = tf.shape(x)
@@ -50,7 +50,8 @@ if is_tf_available():
 
 class TFLongformerModelTester:
     def __init__(
-        self, parent,
+        self,
+        parent,
     ):
         self.parent = parent
         self.batch_size = 13
@@ -265,7 +266,8 @@ class TFLongformerModelTester:
         # global attention mask has to be partly defined
         # to trace all weights
         global_attention_mask = tf.concat(
-            [tf.zeros_like(input_ids)[:, :-1], tf.ones_like(input_ids)[:, -1:]], axis=-1,
+            [tf.zeros_like(input_ids)[:, :-1], tf.ones_like(input_ids)[:, -1:]],
+            axis=-1,
         )
 
         inputs_dict = {
@@ -303,7 +305,13 @@ class TFLongformerModelTest(TFModelTesterMixin, unittest.TestCase):
     test_torchscript = False
 
     all_model_classes = (
-        (TFLongformerModel, TFLongformerForMaskedLM, TFLongformerForQuestionAnswering,) if is_tf_available() else ()
+        (
+            TFLongformerModel,
+            TFLongformerForMaskedLM,
+            TFLongformerForQuestionAnswering,
+        )
+        if is_tf_available()
+        else ()
     )
 
     def setUp(self):
